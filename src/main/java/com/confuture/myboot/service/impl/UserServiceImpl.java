@@ -33,7 +33,7 @@ public class UserServiceImpl implements UserService {
 
         UserPassword userPassword = new UserPassword();
         BeanUtils.copyProperties(userRegister, userPassword);
-        userPassword.setUserId(userInfo.getId());
+//        userPassword.setUserId(userInfo.getId());
         userPasswordMapper.insertSelective(userPassword);
         return true;
     }

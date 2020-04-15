@@ -11,6 +11,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.method.annotation.ModelAttributeMethodProcessor;
 
 import java.util.HashMap;
 import java.util.List;
@@ -34,10 +35,19 @@ public class UserController {
 
     @GetMapping("/otp")
     public JsonResult<Map<String, String>> getOtp(@RequestParam("phone") String phone){
-        String randomOtp = MyUtils.generateOtp();
-        redisUtil.setStringValue(phone, randomOtp);
-        Map<String, String> map = new HashMap<>();
-        map.put(phone, randomOtp);
-        return JsonResult.ok(map);
+
+        String laterOptRecordKey = MyUtils.getLaterRecordOptKey(phone);
+        Object opt_record = redisUtil.get(laterOptRecordKey);
+        if (opt_record == null){
+            String randomOtp = MyUtils.generateOtp();
+            redisUtil.setStringValue(laterOptRecordKey, randomOtp);
+            redisUtil.expire(laterOptRecordKey, 30);
+            Map<String, String> map = new HashMap<>();
+            map.put(phone, randomOtp);
+            return JsonResult.ok(map);
+        }
+        else {
+            return JsonResult.fail("fail", "请不要频繁获取验证码");
+        }
     }
 }

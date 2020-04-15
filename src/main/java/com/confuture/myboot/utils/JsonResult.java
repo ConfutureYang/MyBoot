@@ -32,6 +32,17 @@ public class JsonResult<T> {
         }
     }
 
+    public static <T> JsonResult<T> fail(String status, T data) {
+        if (status.equals("ok")) {
+            throw new RuntimeException("ok is not fail");
+        } else {
+            JsonResult<T> result = new JsonResult();
+            result.setStatus(status);
+            result.setData(data);
+            return result;
+        }
+    }
+
     public static JsonResult badRequest(String msg) {
         return fail("bad_request", msg);
     }

@@ -4,6 +4,8 @@ import java.util.Random;
 
 public class MyUtils {
 
+    private static final String laterRecordOptKey = "LATER:OPT:RECORD:";
+
     public static String generateRandomString(int length){
         String baseString = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         int randomBound = baseString.length() - 1;
@@ -27,5 +29,8 @@ public class MyUtils {
         return randomOtp.toString();
     }
 
+    public static String getLaterRecordOptKey(String phone){
+        return laterRecordOptKey + phone;
+    }
 
 }

@@ -13,6 +13,8 @@ public class UserRegister {
     @Min(value = 20, message = "age最小为20")
     @Max(value = 80, message = "age最大为80")
     private Byte age;
+
+    @NotNull(message = "sex字段不能为空")
     private Byte sex;
     private String password;
     private String userOtp;
