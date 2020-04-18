@@ -2,10 +2,13 @@ package com.confuture.myboot.controller;
 
 import com.confuture.myboot.controller.req.UserRegister;
 import com.confuture.myboot.dao.object.UserInfo;
+import com.confuture.myboot.error.BusinessException;
+import com.confuture.myboot.error.EmBusinessError;
 import com.confuture.myboot.service.UserService;
 import com.confuture.myboot.utils.JsonResult;
 import com.confuture.myboot.utils.MyUtils;
 import com.confuture.myboot.utils.RedisUtil;
+import com.sun.org.apache.xpath.internal.objects.XNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -13,6 +16,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.method.annotation.ModelAttributeMethodProcessor;
 
+import java.io.UnsupportedEncodingException;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,26 +33,49 @@ public class UserController {
     private RedisUtil redisUtil;
 
     @PostMapping("/register")
-    public JsonResult userRegister(@RequestBody @Validated UserRegister userRegister){
-        userService.createUser(userRegister);
+    public JsonResult userRegister(@RequestBody @Validated UserRegister userRegister) throws BusinessException, UnsupportedEncodingException, NoSuchAlgorithmException {
+        String laterOptRecordKey = MyUtils.getLaterRecordOptKey(userRegister.getPhone());
+        String rightOpt = redisUtil.getStringValue(laterOptRecordKey);
+        if (rightOpt != null && rightOpt.equals(userRegister.getUserOtp())){
+            userService.createUser(userRegister);
+        }
+        else {
+            throw new BusinessException(EmBusinessError.OTP_VALID_ERROR);
+        }
         return JsonResult.ok();
     }
 
     @GetMapping("/otp")
-    public JsonResult<Map<String, String>> getOtp(@RequestParam("phone") String phone){
-
+    public JsonResult<Map<String, String>> getOtp(@RequestParam("phone") String phone) throws BusinessException {
         String laterOptRecordKey = MyUtils.getLaterRecordOptKey(phone);
         Object opt_record = redisUtil.get(laterOptRecordKey);
-        if (opt_record == null){
-            String randomOtp = MyUtils.generateOtp();
-            redisUtil.setStringValue(laterOptRecordKey, randomOtp);
-            redisUtil.expire(laterOptRecordKey, 30);
-            Map<String, String> map = new HashMap<>();
-            map.put(phone, randomOtp);
-            return JsonResult.ok(map);
+        if (opt_record != null){
+            throw new BusinessException(EmBusinessError.GET_OTP_TOO_FREQUENT);
         }
-        else {
-            return JsonResult.fail("fail", "请不要频繁获取验证码");
+
+        String dayOptTimeKey = MyUtils.getDayOptTimesKey(phone);
+        String dayOptTimes = redisUtil.getStringValue(dayOptTimeKey);
+
+        if (dayOptTimes != null && Integer.parseInt(dayOptTimes) >= 10 ){
+            throw new BusinessException(EmBusinessError.OTP_DAY_TIMES_LIMIT_ERROR);
         }
+        String randomOtp = MyUtils.generateOtp();
+        redisUtil.setStringValue(laterOptRecordKey, randomOtp);
+        redisUtil.expire(laterOptRecordKey, 30);
+        Map<String, String> map = new HashMap<>();
+        map.put(phone, randomOtp);
+        redisUtil.incr(dayOptTimeKey, 1);
+        redisUtil.expire(dayOptTimeKey, 3600 * 24);
+        return JsonResult.ok(map);
     }
+
+    @PostMapping("/login")
+    public JsonResult userLogin(@RequestParam("phone") String phone, @RequestParam("password") String password){
+
+
+        return JsonResult.ok();
+    }
+
+
+
 }

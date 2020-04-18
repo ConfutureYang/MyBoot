@@ -1,5 +1,6 @@
 package com.confuture.myboot.controller;
 
+import com.confuture.myboot.error.BusinessException;
 import com.confuture.myboot.error.EmBusinessError;
 import com.confuture.myboot.utils.JsonResult;
 import org.springframework.http.HttpStatus;
@@ -25,6 +26,12 @@ public class ExceptionHandlerController {
         }
         else if (ex instanceof BindException){
             return handleParameterInvalid(ex);
+        }
+        else if (ex instanceof BusinessException){
+            httpStatus = HttpStatus.OK;
+            BusinessException businessException = (BusinessException) ex;
+            errorData.put("errorCode", businessException.getErrorCode());
+            errorData.put("errorMsg", businessException.getErrorMsg());
         }
         else {
             httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;

@@ -3,20 +3,27 @@ package com.confuture.myboot.controller.req;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 public class UserRegister {
 
+    @NotNull(message = "手机号不能为空")
     private String phone;
     private String name;
 
-    @NotNull(message = "age字段不能为空")
+    @NotNull(message = "年龄不能为空")
     @Min(value = 20, message = "age最小为20")
     @Max(value = 80, message = "age最大为80")
     private Byte age;
 
-    @NotNull(message = "sex字段不能为空")
+    @NotNull(message = "性别不能为空")
     private Byte sex;
+
+    @NotNull(message = "密码不能为空")
     private String password;
+
+    @NotNull(message = "验证码不能为空")
+    @Size(min = 6, max = 6, message = "验证码长度错误")
     private String userOtp;
 
     public String getPhone() {
