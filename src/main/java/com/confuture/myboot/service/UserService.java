@@ -15,5 +15,5 @@ public interface UserService {
 
     UserDetailInfo getUserDetail(String phone);
 
-    String userLogin(String phone, String password) throws BusinessException;
+    String userLogin(String phone, String password) throws BusinessException, UnsupportedEncodingException, NoSuchAlgorithmException;
 }

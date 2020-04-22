@@ -1,20 +1,16 @@
 package com.confuture.myboot.controller;
 
 import com.confuture.myboot.controller.req.UserRegister;
-import com.confuture.myboot.dao.object.UserInfo;
 import com.confuture.myboot.error.BusinessException;
 import com.confuture.myboot.error.EmBusinessError;
 import com.confuture.myboot.service.UserService;
 import com.confuture.myboot.utils.JsonResult;
 import com.confuture.myboot.utils.MyUtils;
 import com.confuture.myboot.utils.RedisUtil;
-import com.sun.org.apache.xpath.internal.objects.XNull;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.StringRedisTemplate;
+
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.method.annotation.ModelAttributeMethodProcessor;
 
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
@@ -70,10 +66,11 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public JsonResult userLogin(@RequestParam("phone") String phone, @RequestParam("password") String password){
-
-
-        return JsonResult.ok();
+    public JsonResult userLogin(@RequestParam("phone") String phone, @RequestParam("password") String password) throws BusinessException, UnsupportedEncodingException, NoSuchAlgorithmException {
+        String loginToken = userService.userLogin(phone, password);
+        Map<String, String> map = new HashMap<>();
+        map.put("token", loginToken);
+        return JsonResult.ok(map);
     }
 
 

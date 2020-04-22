@@ -13,13 +13,16 @@ public class MyUtils {
 
     private static final String laterRecordOptKey = "LATER:OPT:RECORD:";
     private static final String dayOtpTime = "DAY:OPT:TIME:";
+    private static final String loginToken = "LOGIN:USER:";
 
     private static final String encryptPasswordFactor = "chjawcodf=eweio434kcss12oqwzd";
 
-    public static String generateRandomString(int length){
+    private static final int loginTokenlength = 50;
+
+    public static String generateLoginToken(){
         String baseString = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         int randomBound = baseString.length() - 1;
-        return getString(baseString, randomBound, length);
+        return getString(baseString, randomBound, loginTokenlength);
     }
 
     public static String generateOtp(){
@@ -41,6 +44,10 @@ public class MyUtils {
 
     public static String getLaterRecordOptKey(String phone){
         return laterRecordOptKey + phone;
+    }
+
+    public static String getLoginTokenKey(String phone){
+        return loginToken + phone;
     }
 
     public static String getDayOptTimesKey(String phone){

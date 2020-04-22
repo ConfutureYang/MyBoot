@@ -12,6 +12,7 @@ import com.confuture.myboot.error.BusinessException;
 import com.confuture.myboot.error.EmBusinessError;
 import com.confuture.myboot.service.UserService;
 import com.confuture.myboot.utils.MyUtils;
+import com.confuture.myboot.utils.RedisUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserPasswordMapper userPasswordMapper;
+
+    @Autowired
+    private RedisUtil redisUtil;
 
     @Override
     @Transactional
@@ -62,7 +66,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String userLogin(String phone, String password) throws BusinessException {
+    public String userLogin(String phone, String password) throws BusinessException, UnsupportedEncodingException, NoSuchAlgorithmException {
         UserInfoExample userInfoExample = new UserInfoExample();
         userInfoExample.createCriteria().andPhoneEqualTo(phone);
         UserInfo loginUserInfo = (UserInfo)MyUtils.getFirstOrNull(userInfoMapper.selectByExample(userInfoExample));
@@ -73,7 +77,21 @@ public class UserServiceImpl implements UserService {
 
         UserPasswordExample userPasswordExample = new UserPasswordExample();
         UserPasswordExample.Criteria criteria = userPasswordExample.createCriteria();
-//        criteria.and
+        criteria.andUserIdEqualTo(user_id);
+        UserPassword userPassword = MyUtils.getFirstOrNull(userPasswordMapper.selectByExample(userPasswordExample));
+        if (userPassword == null){
+            throw new BusinessException(EmBusinessError.LOGIN_VALID_ERROR);
+        }
+        else {
+            String encryptPassword = MyUtils.generateEncryptedLoginPassword(password);
+            if (!encryptPassword.equals(userPassword.getPassword())){
+                throw new BusinessException(EmBusinessError.LOGIN_VALID_ERROR);
+            }
+        }
+        String loginToken = MyUtils.generateLoginToken();
+        String loginTokenKey = MyUtils.getLoginTokenKey(loginUserInfo.getPhone());
+        redisUtil.setStringValue(loginTokenKey, loginToken);
+        redisUtil.expire(loginTokenKey, 3600 * 24);
+        return loginToken;
     }
-
 }
